@@ -154,16 +154,21 @@ export class TNSPlayer extends NSObject implements TNSPlayerI {
               data,
               null
             );
-            this._player.delegate = this;
-            this._player.numberOfLoops = options.loop ? -1 : 0;
-
-            if (options.metering) {
-              this._player.meteringEnabled = true;
+            if (this._player) {
+              // this is added because player is null when network is slow or non existent
+              this._player.delegate = this;
+              this._player.numberOfLoops = options.loop ? -1 : 0;
+  
+              if (options.metering) {
+                this._player.meteringEnabled = true;
+              }
+  
+              if (options.autoPlay) this._player.play();
+  
+              resolve();
+            } else {
+              reject();
             }
-
-            if (options.autoPlay) this._player.play();
-
-            resolve();
           }
         );
 

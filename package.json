@@ -1,6 +1,6 @@
 {
   "name": "nativescript-audio-ssi",
-  "version": "4.0.3",
+  "version": "4.0.4",
   "description": "NativeScript plugin to record and play audio.",
   "main": "audio",
   "typings": "index.d.ts",
