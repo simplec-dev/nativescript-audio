@@ -1,5 +1,5 @@
 {
-  "name": "nativescript-audio",
+  "name": "nativescript-audio-ssi",
   "version": "4.0.3",
   "description": "NativeScript plugin to record and play audio.",
   "main": "audio",
@@ -15,7 +15,7 @@
     "demo.ios": "npm run preparedemo; cd demo; tns run ios --emulator",
     "demo.android": "npm run preparedemo; cd demo; tns run android --emulator",
     "preparedemo":
-      "npm run build; cd demo; tns plugin remove nativescript-audio; tns plugin add ..;",
+      "npm run build; cd demo; tns plugin remove nativescript-audio-ssi; tns plugin add ..;",
     "setup":
       "cd demo; npm i; cd ..; npm i; npm run build; cd demo; tns plugin add ..; cd ..",
     "precommit": "lint-staged"
@@ -25,7 +25,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/bradmartin/nativescript-audio.git"
+    "url": "https://github.com/simplec-dev/nativescript-audio.git"
   },
   "keywords": [
     "NativeScript",
@@ -46,69 +46,12 @@
     "email": "bradwaynemartin@gmail.com"
   },
   "contributors": [
-    {
-      "name": "Nathan Walker",
-      "email": " walkerrunpdx@gmail.com",
-      "url": "https://github.com/NathanWalker"
-    },
-    {
-      "name": "Jibon Lawrence Costa",
-      "url": "https://github.com/jibon57"
-    },
-    {
-      "name": "Dylan Ryan",
-      "url": "https://github.com/dylanryan"
-    },
-    {
-      "name": "Alexander Vakrilov",
-      "url": "https://github.com/vakrilov"
-    },
-    {
-      "name": "GT Nunes",
-      "url": "https://github.com/gtnunes1956"
-    },
-    {
-      "name": "Andrea Sotto",
-      "url": "https://github.com/andreasotto"
-    },
-    {
-      "name": "August Heegaard",
-      "url": "https://github.com/agisboye"
-    },
-    {
-      "name": "Akmal Sultonov",
-      "url": "https://github.com/asultonov"
-    },
-    {
-      "name": "Amit Gharat",
-      "url": "https://github.com/codef0rmer"
-    },
-    {
-      "name": "Jen Looper",
-      "url": "https://github.com/jlooper"
-    },
-    {
-      "name": "Stanimira Vlaeva",
-      "url": "https://github.com/sis0k0"
-    },
-    {
-      "name": "Osei Fortune",
-      "url": "https://github.com/triniwiz"
-    },
-    {
-      "name": "RedPandaTronics",
-      "url": "https://github.com/redpandatronicsuk"
-    },
-    {
-      "name": "Chris Flannagan",
-      "url": "https://github.com/ChrisFlannagan"
-    }
   ],
   "bugs": {
-    "url": "https://github.com/bradmartin/nativescript-audio/issues"
+    "url": "https://github.com/simplec-dev/nativescript-audio/issues"
   },
   "license": "MIT",
-  "homepage": "https://github.com/bradmartin/nativescript-audio",
+  "homepage": "https://github.com/simplec-dev/nativescript-audio",
   "readmeFilename": "README.md",
   "peerDependencies": {
     "tns-core-modules": "^3.0.0"

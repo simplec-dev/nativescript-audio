@@ -4,6 +4,8 @@
 # NativeScript-Audio
 NativeScript plugin to play and record audio files for Android and iOS.
 
+This forks from Brad Martin's plugin.  It fixes an issue in ios when dispose is called before init from url completes.
+
 Uses the following native classes:
 
 #### Android

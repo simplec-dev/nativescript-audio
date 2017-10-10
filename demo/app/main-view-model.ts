@@ -14,7 +14,7 @@ import {
   TNSPlayer,
   AudioPlayerOptions,
   AudioRecorderOptions
-} from "nativescript-audio";
+} from "nativescript-audio-ssi";
 
 declare var android;
 
