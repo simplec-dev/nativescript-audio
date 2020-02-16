@@ -1,0 +1,24 @@
+demo/
+screens/
+node_modules/
+tsconfig.json
+*.png
+*.log
+*.ts
+!index.d.ts
+!async-await.js
+
+# generated files
+.vs
+.vs/
+.sln
+*.sln
+demo/
+screens/
+node_modules/
+
+*.ts
+!*.d.ts
+*.map
+tsconfig.json
+references.d.ts

@@ -1,8 +1,0 @@
-demo/
-screens/
-node_modules/
-tsconfig.json
-*.png
-*.log
-*.ts
-!index.d.ts

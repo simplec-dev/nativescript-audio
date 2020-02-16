@@ -1,75 +1,72 @@
-// import * as fs from 'file-system';
-import * as app from "tns-core-modules/application";
-import * as color from "tns-core-modules/color";
-import * as platform from "tns-core-modules/platform";
-import * as dialogs from "tns-core-modules/ui/dialogs";
-import * as timer from "tns-core-modules/timer";
-import { Observable } from "tns-core-modules/data/observable";
-import { knownFolders, File } from "tns-core-modules/file-system";
-import { Page } from "tns-core-modules/ui/page";
-import { Slider } from "tns-core-modules/ui/slider";
-import { SnackBar } from "nativescript-snackbar";
-import {
-  TNSRecorder,
-  TNSPlayer,
-  AudioPlayerOptions,
-  AudioRecorderOptions
-} from "nativescript-audio-ssi";
-
-declare var android;
+import * as app from '@nativescript/core/application';
+import { Observable } from '@nativescript/core/data/observable';
+import { File, knownFolders } from '@nativescript/core/file-system';
+import * as platform from '@nativescript/core/platform';
+import * as timer from '@nativescript/core/timer';
+import * as dialogs from '@nativescript/core/ui/dialogs';
+import { Page } from '@nativescript/core/ui/page';
+import { Slider } from '@nativescript/core/ui/slider';
+import { AudioPlayerOptions, AudioRecorderOptions, TNSPlayer, TNSRecorder } from 'nativescript-audio';
 
 export class AudioDemo extends Observable {
-  public isPlaying: boolean;
-  public isRecording: boolean;
-  public recordedAudioFile: string;
-  public remainingDuration; // used to show the remaining time of the audio track
-  private recorder;
-  private player: TNSPlayer;
-  private audioSessionId;
-  private page;
-  private audioUrls: Array<any> = [
+  @ObservableProperty() public isPlaying: boolean;
+  @ObservableProperty() public isRecording: boolean;
+  @ObservableProperty() public audioMeter = '0';
+  @ObservableProperty() public recordedAudioFile: string;
+  @ObservableProperty() public currentVolume;
+  @ObservableProperty() public audioTrackDuration;
+  @ObservableProperty() public remainingDuration; // used to show the remaining time of the audio track
+  private _recorder;
+  private _player: TNSPlayer;
+  private _audioSessionId;
+  private _page;
+  private _audioUrls: Array<any> = [
     {
-      name: "Fight Club",
-      pic: "~/pics/canoe_girl.jpeg",
-      url: "http://www.noiseaddicts.com/samples_1w72b820/2514.mp3"
+      name: 'Fight Club',
+      pic: '~/pics/canoe_girl.jpeg',
+      url: 'http://www.noiseaddicts.com/samples_1w72b820/2514.mp3'
     },
     {
-      name: "To The Bat Cave!!!",
-      pic: "~/pics/bears.jpeg",
-      url: "http://www.noiseaddicts.com/samples_1w72b820/17.mp3"
+      name: 'To The Bat Cave!!!',
+      pic: '~/pics/bears.jpeg',
+      url: 'http://www.noiseaddicts.com/samples_1w72b820/17.mp3'
     },
     {
-      name: "Marlon Brando",
-      pic: "~/pics/northern_lights.jpeg",
-      url: "http://www.noiseaddicts.com/samples_1w72b820/47.mp3"
+      name: 'Marlon Brando',
+      pic: '~/pics/northern_lights.jpeg',
+      url: 'http://www.noiseaddicts.com/samples_1w72b820/47.mp3'
     }
   ];
-  private meterInterval: any;
-  private _SnackBar: SnackBar;
+  private _meterInterval: any;
   private _slider: Slider;
 
   constructor(page: Page) {
     super();
+    this._player = new TNSPlayer();
+    this._player.debug = true; // set true for tns_player logs
 
-    this.player = new TNSPlayer();
-    this.recorder = new TNSRecorder();
-    this._SnackBar = new SnackBar();
-    this.set("currentVolume", 1);
-    this._slider = page.getViewById("slider") as Slider;
+    this._recorder = new TNSRecorder();
+    this._recorder.debug = true; // set true for tns_recorder logs
+
+    this.currentVolume = 1;
+    this._slider = page.getViewById('volumeSlider') as Slider;
 
     // Set player volume
     if (this._slider) {
-      this._slider.on("valueChange", (data: any) => {
-        this.player.volume = this._slider.value / 100;
+      this._slider.on('valueChange', (data: any) => {
+        this._player.volume = this._slider.value / 100;
       });
     }
 
-    this.startDurationTracking();
   }
 
-  public startRecord(args) {
-    if (TNSRecorder.CAN_RECORD()) {
-      var audioFolder = knownFolders.currentApp().getFolder("audio");
+  public async startRecord(args) {
+    try {
+      if (!TNSRecorder.CAN_RECORD()) {
+        dialogs.alert('This device cannot record audio.');
+        return;
+      }
+      const audioFolder = knownFolders.currentApp().getFolder('audio');
       console.log(JSON.stringify(audioFolder));
 
       let androidFormat;
@@ -83,8 +80,9 @@ export class AudioDemo extends Observable {
         androidEncoder = 3;
       }
 
-      let recordingPath = `${audioFolder.path}/recording.${this.platformExtension()}`;
-      let recorderOptions: AudioRecorderOptions = {
+      const recordingPath = `${audioFolder.path}/recording.${this.platformExtension()}`;
+
+      const recorderOptions: AudioRecorderOptions = {
         filename: recordingPath,
 
         format: androidFormat,
@@ -102,175 +100,134 @@ export class AudioDemo extends Observable {
         }
       };
 
-      this.recorder.start(recorderOptions).then(
-        result => {
-          this.set("isRecording", true);
-          if (recorderOptions.metering) {
-            this.initMeter();
-          }
-        },
-        err => {
-          this.set("isRecording", false);
-          this.resetMeter();
-          dialogs.alert(err);
-        }
-      );
-    } else {
-      dialogs.alert("This device cannot record audio.");
+      await this._recorder.start(recorderOptions);
+      this.isRecording = true;
+      if (recorderOptions.metering) {
+        this._initMeter();
+      }
+    } catch (err) {
+      this.isRecording = false;
+      this._resetMeter();
+      dialogs.alert(err);
     }
   }
 
-  public stopRecord(args) {
-    this.resetMeter();
-    this.recorder.stop().then(
-      () => {
-        this.set("isRecording", false);
-        this._SnackBar.simple("Recorder stopped");
-        this.resetMeter();
-      },
-      ex => {
-        console.log(ex);
-        this.set("isRecording", false);
-        this.resetMeter();
-      }
-    );
+  public async stopRecord(args) {
+    this._resetMeter();
+    await this._recorder.stop().catch(ex => {
+      console.log(ex);
+      this.isRecording = false;
+      this._resetMeter();
+    });
+
+    this.isRecording = false;
+    alert('Recorder stopped.');
+    this._resetMeter();
   }
 
-  private initMeter() {
-    this.resetMeter();
-    this.meterInterval = setInterval(() => {
-      console.log(this.recorder.getMeters());
-    }, 500);
+  private _initMeter() {
+    this._resetMeter();
+    this._meterInterval = setInterval(() => {
+      this.audioMeter = this._recorder.getMeters();
+      console.log(this.audioMeter);
+    }, 300);
   }
 
-  private resetMeter() {
-    if (this.meterInterval) {
-      clearInterval(this.meterInterval);
-      this.meterInterval = undefined;
+  private _resetMeter() {
+    if (this._meterInterval) {
+      this.audioMeter = '0';
+      clearInterval(this._meterInterval);
+      this._meterInterval = undefined;
     }
   }
 
   public getFile(args) {
     try {
-      var audioFolder = knownFolders.currentApp().getFolder("audio");
-      var recordedFile = audioFolder.getFile(
-        `recording.${this.platformExtension()}`
-      );
+      const audioFolder = knownFolders.currentApp().getFolder('audio');
+      const recordedFile = audioFolder.getFile(`recording.${this.platformExtension()}`);
       console.log(JSON.stringify(recordedFile));
-      console.log("recording exists: " + File.exists(recordedFile.path));
-      this.set("recordedAudioFile", recordedFile.path);
+      console.log('recording exists: ' + File.exists(recordedFile.path));
+      this.recordedAudioFile = recordedFile.path;
     } catch (ex) {
       console.log(ex);
     }
   }
 
-  public playRecordedFile(args) {
-    var audioFolder = knownFolders.currentApp().getFolder("audio");
-    var recordedFile = audioFolder.getFile(
-      `recording.${this.platformExtension()}`
-    );
-    console.log("RECORDED FILE : " + JSON.stringify(recordedFile));
+  public async playRecordedFile(args) {
+    const audioFolder = knownFolders.currentApp().getFolder('audio');
+    const recordedFile = audioFolder.getFile(`recording.${this.platformExtension()}`);
+    console.log('RECORDED FILE : ' + JSON.stringify(recordedFile));
 
-    var playerOptions: AudioPlayerOptions = {
+    const playerOptions: AudioPlayerOptions = {
       audioFile: `~/audio/recording.${this.platformExtension()}`,
       loop: false,
-      completeCallback: () => {
-        this._SnackBar.simple("Audio file complete");
-        this.set("isPlaying", false);
+      completeCallback: async () => {
+        alert('Audio file complete.');
+        this.isPlaying = false;
         if (!playerOptions.loop) {
-          this.player.dispose().then(
-            () => {
-              console.log("DISPOSED");
-            },
-            err => {
-              console.log(err);
-            }
-          );
+          await this._player.dispose();
+          console.log('player disposed');
         }
       },
 
       errorCallback: errorObject => {
         console.log(JSON.stringify(errorObject));
-
-        dialogs.alert("Error callback");
-        this.set("isPlaying", false);
+        this.isPlaying = false;
       },
 
       infoCallback: infoObject => {
         console.log(JSON.stringify(infoObject));
-
-        dialogs.alert("Info callback");
+        dialogs.alert('Info callback');
       }
     };
 
-    this.player.playFromFile(playerOptions).then(
-      () => {
-        this.set("isPlaying", true);
-      },
-      err => {
-        console.log(err);
-        this.set("isPlaying", false);
-      }
-    );
+    await this._player.playFromFile(playerOptions).catch(err => {
+      console.log('error playFromFile');
+      this.isPlaying = false;
+    });
+
+    this.isPlaying = true;
   }
 
   /***** AUDIO PLAYER *****/
 
-  public playAudio(filepath: string, fileType: string) {
+  public async playAudio(filepath: string, fileType: string) {
     try {
       const playerOptions: AudioPlayerOptions = {
         audioFile: filepath,
         loop: false,
-        completeCallback: () => {
-          this._SnackBar.simple("Audio file complete");
-
-          this.player.dispose().then(
-            () => {
-              this.set("isPlaying", false);
-              console.log("DISPOSED");
-            },
-            err => {
-              console.log("ERROR disposePlayer: " + err);
-            }
-          );
+        completeCallback: async () => {
+          alert('Audio file complete.');
+          await this._player.dispose();
+          this.isPlaying = false;
+          console.log('player disposed');
         },
-
         errorCallback: errorObject => {
-          this._SnackBar.simple("Error occurred during playback.");
           console.log(JSON.stringify(errorObject));
-          this.set("isPlaying", false);
+          this.isPlaying = false;
         },
-
         infoCallback: args => {
-          console.log(JSON.stringify(args));
-
-          dialogs.alert("Info callback: " + args.info);
+          dialogs.alert('Info callback: ' + args.info);
           console.log(JSON.stringify(args));
         }
       };
 
-      this.set("isPlaying", true);
+      this.isPlaying = true;
 
-      if (fileType === "localFile") {
-        this.player.playFromFile(playerOptions).then(
-          () => {
-            this.set("isPlaying", true);
-          },
-          err => {
-            console.log(err);
-            this.set("isPlaying", false);
-          }
-        );
-      } else if (fileType === "remoteFile") {
-        this.player.playFromUrl(playerOptions).then(
-          () => {
-            this.set("isPlaying", true);
-          },
-          err => {
-            console.log(err);
-            this.set("isPlaying", false);
-          }
-        );
+      if (fileType === 'localFile') {
+        await this._player.playFromFile(playerOptions).catch(() => {
+          this.isPlaying = false;
+        });
+        this.isPlaying = true;
+        this.audioTrackDuration = await this._player.getAudioTrackDuration();
+        // start audio duration tracking
+        this._startDurationTracking(this.audioTrackDuration);
+        this._startVolumeTracking();
+      } else if (fileType === 'remoteFile') {
+        await this._player.playFromUrl(playerOptions).catch(() => {
+          this.isPlaying = false;
+        });
+        this.isPlaying = true;
       }
     } catch (ex) {
       console.log(ex);
@@ -281,77 +238,121 @@ export class AudioDemo extends Observable {
    * PLAY REMOTE AUDIO FILE
    */
   public playRemoteFile(args) {
-    console.log("playRemoteFile");
-    var filepath = "http://www.noiseaddicts.com/samples_1w72b820/2514.mp3";
+    console.log('playRemoteFile');
+    const filepath = 'http://www.noiseaddicts.com/samples_1w72b820/2514.mp3';
 
-    this.playAudio(filepath, "remoteFile");
+    this.playAudio(filepath, 'remoteFile');
   }
 
   public resumePlayer() {
-    console.log(JSON.stringify(this.player));
-    this.player.resume();
+    console.log(JSON.stringify(this._player));
+    this._player.resume();
   }
 
   /**
    * PLAY LOCAL AUDIO FILE from app folder
    */
   public playLocalFile(args) {
-    let filepath = "~/audio/angel.mp3";
-
-    this.playAudio(filepath, "localFile");
+    let filepath = '~/audio/angel.mp3';
+    this.playAudio(filepath, 'localFile');
   }
 
   /**
    * PAUSE PLAYING
    */
-  public pauseAudio(args) {
-    this.player.pause().then(
-      () => {
-        this.set("isPlaying", false);
-      },
-      err => {
-        console.log(err);
-        this.set("isPlaying", true);
-      }
-    );
+  public async pauseAudio(args) {
+    try {
+      await this._player.pause();
+      this.isPlaying = false;
+    } catch (error) {
+      console.log(error);
+      this.isPlaying = true;
+    }
   }
 
-  public stopPlaying(args) {
-    this.player.dispose().then(
-      () => {
-        this._SnackBar.simple("Media Player Disposed");
-      },
-      err => {
-        console.log(err);
-      }
-    );
+  public async stopPlaying(args) {
+    await this._player.dispose();
+    alert('Media Player Disposed.');
   }
 
   /**
    * RESUME PLAYING
    */
   public resumePlaying(args) {
-    console.log("START");
-    this.player.play();
-    // start();
+    console.log('START');
+    this._player.play();
+  }
+
+  public muteTap() {
+    this._player.volume = 0;
+  }
+
+  public unmuteTap() {
+    this._player.volume = 1;
+  }
+
+  public skipTo8() {
+    this._player.seekTo(8);
+  }
+
+  public playSpeed1() {
+    this._player.changePlayerSpeed(1);
+  }
+
+  public playSpeed15() {
+    this._player.changePlayerSpeed(1.5);
+  }
+
+  public playSpeed2() {
+    this._player.changePlayerSpeed(2);
   }
 
   private platformExtension() {
-    //'mp3'
-    return `${app.android ? "m4a" : "caf"}`;
+    // 'mp3'
+    return `${app.android ? 'm4a' : 'caf'}`;
   }
 
-  private startDurationTracking() {
-    if (this.player) {
-      let duration;
-      this.player.getAudioTrackDuration().then(result => {
-        console.log(`Audio track duration = ${result}`);
-        duration = result;
-        const timerId = timer.setInterval(() => {
-          this.remainingDuration = duration - this.player.currentTime;
-          console.log(`this.remainingDuration = ${this.remainingDuration}`);
-        }, 1000);
-      });
+  private async _startDurationTracking(duration) {
+    if (this._player && this._player.isAudioPlaying()) {
+      const timerId = timer.setInterval(() => {
+        this.remainingDuration = duration - this._player.currentTime;
+        // console.log(`this.remainingDuration = ${this.remainingDuration}`);
+      }, 1000);
     }
   }
+
+  private _startVolumeTracking() {
+    if (this._player) {
+      const timerId = timer.setInterval(() => {
+        console.log('volume tracking', this._player.volume);
+        this.currentVolume = this._player.volume;
+      }, 2000);
+    }
+  }
+}
+
+export function ObservableProperty() {
+  return (obj: Observable, key: string) => {
+    let storedValue = obj[key];
+
+    Object.defineProperty(obj, key, {
+      get: function() {
+        return storedValue;
+      },
+      set: function(value) {
+        if (storedValue === value) {
+          return;
+        }
+        storedValue = value;
+        this.notify({
+          eventName: Observable.propertyChangeEvent,
+          propertyName: key,
+          object: this,
+          value
+        });
+      },
+      enumerable: true,
+      configurable: true
+    });
+  };
 }

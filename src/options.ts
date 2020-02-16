@@ -1,6 +1,6 @@
 /**
-* Provides options for the audio player.
-*/
+ * Provides options for the audio player.
+ */
 export interface AudioPlayerOptions {
   /**
    * Gets or sets the audio file url.
@@ -14,8 +14,8 @@ export interface AudioPlayerOptions {
   completeCallback?: Function;
 
   /**
-  * Get or sets the player to loop playback.
-  */
+   * Get or sets the player to loop playback.
+   */
   loop: boolean;
 
   /**
@@ -99,3 +99,9 @@ export interface AudioRecorderOptions {
    */
   infoCallback?: Function;
 }
+
+export const AudioPlayerEvents = {
+  seek: 'seek',
+  paused: 'paused',
+  started: 'started'
+};
