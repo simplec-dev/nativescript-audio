@@ -281,16 +281,6 @@ export class TNSPlayer extends NSObject implements TNSPlayerI {
     });
   }
 
-  public get volume(): number {
-    return this._player ? this._player.volume : 0;
-  }
-
-  public set volume(value: number) {
-    if (this._player) {
-      this._player.volume = value;
-    }
-  }
-
   public dispose(): Promise<any> {
     return new Promise((resolve, reject) => {
       try {
