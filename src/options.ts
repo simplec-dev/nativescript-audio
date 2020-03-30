@@ -54,6 +54,8 @@ export interface AudioRecorderOptions {
 
   /**
    * Gets or set the max duration of the recording session.
+   * Input in milliseconds, which is Android's format.
+   * Will be converted appropriately for iOS.
    */
   maxDuration?: number;
 

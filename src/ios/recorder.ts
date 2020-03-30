@@ -6,6 +6,8 @@ export class TNSRecorder extends NSObject implements TNSRecordI {
   private _recorder: any;
   private _recordingSession: any;
 
+  private _recorderOptions: AudioRecorderOptions;
+
   public static CAN_RECORD(): boolean {
     return true;
   }
@@ -31,6 +33,7 @@ export class TNSRecorder extends NSObject implements TNSRecordI {
   }
 
   public start(options: AudioRecorderOptions): Promise<any> {
+    this._recorderOptions = options;
     return new Promise((resolve, reject) => {
       try {
         this._recordingSession = AVAudioSession.sharedInstance();
@@ -72,8 +75,13 @@ export class TNSRecorder extends NSObject implements TNSRecordI {
               if (options.metering) {
                 this._recorder.meteringEnabled = true;
               }
-              this._recorder.prepareToRecord();
-              this._recorder.record();
+              if (options.maxDuration) {
+                  this._recorder.recordForDuration(options.maxDuration / 1000);
+              } else {
+                  this._recorder.prepareToRecord();
+                  this._recorder.record();
+              }
+
               resolve();
             }
           }
@@ -168,5 +176,27 @@ export class TNSRecorder extends NSObject implements TNSRecordI {
 
   public audioRecorderDidFinishRecording(recorder: any, success: boolean) {
     console.log(`audioRecorderDidFinishRecording: ${success}`);
+    // Using values that match Android info call backs:
+    // https://developer.android.com/reference/android/media/MediaRecorder#MEDIA_RECORDER_INFO_MAX_DURATION_REACHED
+    // 800 is max duration, so that code gets a chance to handle the finished call
+    if (success && this._recorderOptions.infoCallback) {
+        var info = 800;
+        var extra = 800;
+        this._recorderOptions.infoCallback({ recorder, info, extra });
+    } else if (!success && this._recorderOptions.errorCallback) {
+        var err = 1;
+        var extra = 1;
+        this._recorderOptions.errorCallback({ recorder, err, extra }); // since didn't succeed call error
+    }
   }
+
+    public audioRecorderErrorDidOccur(recorder: any, error: Error) {
+        // Using values that match Android info call backs:
+        // https://developer.android.com/reference/android/media/MediaRecorder#MEDIA_RECORDER_ERROR_UNKNOWN
+        var err = 1;
+        var extra = 1;
+        if (this._recorderOptions.errorCallback) {
+            this._recorderOptions.errorCallback({ recorder, err, extra });
+        }
+    }
 }
