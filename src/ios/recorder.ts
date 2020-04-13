@@ -174,7 +174,7 @@ export class TNSRecorder extends NSObject implements TNSRecordI {
     }
   }
 
-  public audioRecorderDidFinishRecording(recorder: any, success: boolean) {
+  public audioRecorderDidFinishRecordingSuccessfully(recorder: any, success: boolean) {
     console.log(`audioRecorderDidFinishRecording: ${success}`);
     // Using values that match Android info call backs:
     // https://developer.android.com/reference/android/media/MediaRecorder#MEDIA_RECORDER_INFO_MAX_DURATION_REACHED
@@ -182,7 +182,7 @@ export class TNSRecorder extends NSObject implements TNSRecordI {
     if (success && this._recorderOptions.infoCallback) {
         var info = 800;
         var extra = 800;
-        this._recorderOptions.infoCallback({ recorder, info, extra });
+        //this._recorderOptions.infoCallback({ recorder, info, extra });
     } else if (!success && this._recorderOptions.errorCallback) {
         var err = 1;
         var extra = 1;
