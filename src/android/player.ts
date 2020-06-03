@@ -2,7 +2,15 @@ import * as app from 'tns-core-modules/application';
 import { Observable } from 'tns-core-modules/data/observable';
 import { isFileOrResourcePath } from 'tns-core-modules/utils/utils';
 import { resolveAudioFilePath, TNSPlayerI, TNSPlayerUtil, TNS_Player_Log } from '../common';
-import { AudioPlayerEvents, AudioPlayerOptions, AudioFocusDurationHint } from '../options';
+import { AudioPlayerEvents, AudioPlayerOptions } from '../options';
+
+
+export enum AudioFocusDurationHint {
+  AUDIOFOCUS_GAIN = android.media.AudioManager.AUDIOFOCUS_GAIN,
+  AUDIOFOCUS_GAIN_TRANSIENT = android.media.AudioManager.AUDIOFOCUS_GAIN_TRANSIENT,
+  AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK = android.media.AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK,
+  AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE = android.media.AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK
+}
 
 export class TNSPlayer implements TNSPlayerI {
   private _mediaPlayer: android.media.MediaPlayer;

@@ -107,10 +107,3 @@ export const AudioPlayerEvents = {
   paused: 'paused',
   started: 'started'
 };
-
-export enum AudioFocusDurationHint {
-  AUDIOFOCUS_GAIN = android.media.AudioManager.AUDIOFOCUS_GAIN,
-  AUDIOFOCUS_GAIN_TRANSIENT = android.media.AudioManager.AUDIOFOCUS_GAIN_TRANSIENT,
-  AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK = android.media.AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK,
-  AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE = android.media.AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK
-}
