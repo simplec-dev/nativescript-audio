@@ -37,6 +37,7 @@ demo/app/.DS_Store
 *.js.map
 *.log
 src/*.d.ts
+src/package-lock.json
 !src/index.d.ts
 !src/references.d.ts
 !src/scripts/*.js
