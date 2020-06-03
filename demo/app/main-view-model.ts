@@ -253,7 +253,7 @@ export class AudioDemo extends Observable {
    * PLAY LOCAL AUDIO FILE from app folder
    */
   public playLocalFile(args) {
-    let filepath = '~/audio/angel.mp3';
+    const filepath = '~/audio/angel.mp3';
     this.playAudio(filepath, 'localFile');
   }
 

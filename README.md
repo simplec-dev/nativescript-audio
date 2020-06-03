@@ -4,27 +4,19 @@
 <h4 align="center">NativeScript plugin to play and record audio files for Android and iOS.</h4>
 
 <p align="center">
+ <a href="https://www.npmjs.com/package/@nstudio/nativescript-audio">
+        <img src="https://github.com/nstudio/nativescript-audio/workflows/Build%20CI/badge.svg" alt="Action Build">
+    </a>
     <a href="https://www.npmjs.com/package/nativescript-audio">
         <img src="https://img.shields.io/npm/v/nativescript-audio.svg" alt="npm">
     </a>
     <a href="https://www.npmjs.com/package/nativescript-audio">
         <img src="https://img.shields.io/npm/dt/nativescript-audio.svg?label=npm%20downloads" alt="npm">
     </a>
-    <a href="https://github.com/nstudio/nativescript-audio/stargazers">
-        <img src="https://img.shields.io/github/stars/nstudio/nativescript-audio.svg" alt="stars">
-    </a>
-     <a href="https://github.com/nstudio/nativescript-audio/network">
-        <img src="https://img.shields.io/github/forks/nstudio/nativescript-audio.svg" alt="forks">
-    </a>
-    <a href="https://github.com/nstudio/nativescript-audio/blob/master/LICENSE.md">
-        <img src="https://img.shields.io/github/license/nstudio/nativescript-audio.svg" alt="license">
-    </a>
-    <a href="https://paypal.me/bradwayne88">
-        <img src="https://img.shields.io/badge/Donate-PayPal-green.svg" alt="donate">
-    </a>
     <a href="http://nstudio.io">
       <img src="./screens/nstudio-banner.png" alt="nStudio banner">
     </a>
+    <br />
     <h5 align="center">Do you need assistance on your project or plugin? Contact the nStudio team anytime at <a href="mailto:team@nstudio.io">team@nstudio.io</a> to get up to speed with the best practices in mobile and web app development.
     </h5>
 </p>
@@ -69,16 +61,22 @@ export class YourClass {
 
   constructor() {
     this._player = new TNSPlayer();
+    // You can pass a duration hint to control the behavior of other application that may
+    // be holding audio focus.
+    // For example: new  TNSPlayer(AudioFocusDurationHint.AUDIOFOCUS_GAIN_TRANSIENT);
+    // Then when you play a song, the previous owner of the
+    // audio focus will stop. When your song stops
+    // the previous holder will resume.
     this._player.debug = true; // set true to enable TNSPlayer console logs for debugging.
     this._player
       .initFromFile({
         audioFile: '~/audio/song.mp3', // ~ = app directory
         loop: false,
         completeCallback: this._trackComplete.bind(this),
-        errorCallback: this._trackError.bind(this)
+        errorCallback: this._trackError.bind(this),
       })
       .then(() => {
-        this._player.getAudioTrackDuration().then(duration => {
+        this._player.getAudioTrackDuration().then((duration) => {
           // iOS: duration is in seconds
           // Android: duration is in milliseconds
           console.log(`song duration:`, duration);
@@ -118,23 +116,23 @@ const player = new audio.TNSPlayer();
 const playerOptions = {
   audioFile: 'http://some/audio/file.mp3',
   loop: false,
-  completeCallback: function() {
+  completeCallback: function () {
     console.log('finished playing');
   },
-  errorCallback: function(errorObject) {
+  errorCallback: function (errorObject) {
     console.log(JSON.stringify(errorObject));
   },
-  infoCallback: function(args) {
+  infoCallback: function (args) {
     console.log(JSON.stringify(args));
-  }
+  },
 };
 
 player
   .playFromUrl(playerOptions)
-  .then(function(res) {
+  .then(function (res) {
     console.log(res);
   })
-  .catch(function(err) {
+  .catch(function (err) {
     console.log('something went wrong...', err);
   });
 ```
@@ -178,7 +176,7 @@ player
 | _playFromUrl(options: AudioPlayerOptions)_: `Promise`                  | Auto-play from a url.                                        |
 | _pause()_: `Promise<boolean>`                                          | Pause playback.                                              |
 | _resume()_: `void`                                                     | Resume playback.                                             |
-| _seekTo(time:number)_: `Promise<boolean>`                              | Seek to position of track (in seconds).                     |
+| _seekTo(time:number)_: `Promise<boolean>`                              | Seek to position of track (in seconds).                      |
 | _dispose()_: `Promise<boolean>`                                        | Free up resources when done playing audio.                   |
 | _isAudioPlaying()_: `boolean`                                          | Determine if player is playing.                              |
 | _getAudioTrackDuration()_: `Promise<string>`                           | Duration of media file assigned to the player.               |
