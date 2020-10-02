@@ -4,7 +4,7 @@
 <h4 align="center">NativeScript plugin to play and record audio files for Android and iOS.</h4>
 
 <p align="center">
- <a href="https://www.npmjs.com/package/@nstudio/nativescript-audio">
+    <a href="https://www.npmjs.com/package/@nstudio/nativescript-audio">
         <img src="https://github.com/nstudio/nativescript-audio/workflows/Build%20CI/badge.svg" alt="Action Build">
     </a>
     <a href="https://www.npmjs.com/package/nativescript-audio">
@@ -13,12 +13,6 @@
     <a href="https://www.npmjs.com/package/nativescript-audio">
         <img src="https://img.shields.io/npm/dt/nativescript-audio.svg?label=npm%20downloads" alt="npm">
     </a>
-    <a href="http://nstudio.io">
-      <img src="./screens/nstudio-banner.png" alt="nStudio banner">
-    </a>
-    <br />
-    <h5 align="center">Do you need assistance on your project or plugin? Contact the nStudio team anytime at <a href="mailto:team@nstudio.io">team@nstudio.io</a> to get up to speed with the best practices in mobile and web app development.
-    </h5>
 </p>
 
 ---
@@ -28,7 +22,13 @@ This forks from Brad Martin's plugin.  It fixes an issue in ios when dispose is 
 Uses the following native classes:
 ## Installation
 
-`tns plugin add nativescript-audio`
+#### NativeScript 7+:
+
+`ns plugin add nativescript-audio`
+
+#### NativeScript Version prior to 7:
+
+`tns plugin add nativescript-audio@5.1.1`
 
 ---
 
@@ -42,11 +42,23 @@ Uses the following native classes:
 - [Player - AVAudioPlayer](https://developer.apple.com/library/ios/documentation/AVFoundation/Reference/AVAudioPlayerClassReference/)
 - [Recorder - AVAudioRecorder](https://developer.apple.com/library/ios/documentation/AVFoundation/Reference/AVAudioRecorder_ClassReference/)
 
-Note: You will need to grant permissions on iOS to allow the device to access the microphone if you are using the recording function. If you don't, your app may crash on device and/or your app might be rejected during Apple's review routine. To do this, add this key to your `app/App_Resources/iOS/Info.plist` file:
+### Permissions
+
+#### iOS
+
+You will need to grant permissions on iOS to allow the device to access the microphone if you are using the recording function. If you don't, your app may crash on device and/or your app might be rejected during Apple's review routine. To do this, add this key to your `app/App_Resources/iOS/Info.plist` file:
 
 ```xml
 <key>NSMicrophoneUsageDescription</key>
 <string>Recording Practice Sessions</string>
+```
+
+#### Android
+
+If you are going to use the recorder capability for Android, you need to add the RECORD_AUDIO permission to your AndroidManifest.xml file located in App_Resources.
+
+```xml
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
 ```
 
 ## Usage
@@ -73,10 +85,10 @@ export class YourClass {
         audioFile: '~/audio/song.mp3', // ~ = app directory
         loop: false,
         completeCallback: this._trackComplete.bind(this),
-        errorCallback: this._trackError.bind(this),
+        errorCallback: this._trackError.bind(this)
       })
       .then(() => {
-        this._player.getAudioTrackDuration().then((duration) => {
+        this._player.getAudioTrackDuration().then(duration => {
           // iOS: duration is in seconds
           // Android: duration is in milliseconds
           console.log(`song duration:`, duration);
@@ -124,15 +136,15 @@ const playerOptions = {
   },
   infoCallback: function (args) {
     console.log(JSON.stringify(args));
-  },
+  }
 };
 
 player
   .playFromUrl(playerOptions)
-  .then(function (res) {
+  .then(res => {
     console.log(res);
   })
-  .catch(function (err) {
+  .catch(err => {
     console.log('something went wrong...', err);
   });
 ```

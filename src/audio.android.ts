@@ -1,14 +1,4 @@
-/**
- * Option interfaces
- */
+export * from './android/player';
+export * from './android/recorder';
 export * from './options';
 
-/**
- * Player
- */
-export * from './android/player';
-
-/**
- * Recorder
- */
-export * from './android/recorder';

@@ -1,14 +1,48 @@
-import { TNSRecorderUtil, TNSRecordI, TNS_Recorder_Log } from '../common';
+import { Observable } from '@nativescript/core';
+import { TNSRecordI } from '../common';
 import { AudioRecorderOptions } from '../options';
 
-export class TNSRecorder extends NSObject implements TNSRecordI {
-  public static ObjCProtocols = [AVAudioRecorderDelegate];
+@NativeClass()
+export class TNSRecorderDelegate
+  extends NSObject
+  implements AVAudioRecorderDelegate {
+  static ObjCProtocols = [AVAudioRecorderDelegate];
+  private _owner: WeakRef<TNSRecorder>;
+
+  static initWithOwner(owner: TNSRecorder) {
+    const delegate = <TNSRecorderDelegate>TNSRecorderDelegate.new();
+    delegate._owner = new WeakRef(owner);
+    return delegate;
+  }
+
+  audioRecorderDidFinishRecording(recorder: any, success: boolean) {
+    console.log(`audioRecorderDidFinishRecording: ${success}`);
+    const owner = this._owner.get();
+    if (owner) {
+      // owner.notify({
+      //   eventName: 'RecorderFinished',
+      // })
+    }
+  }
+
+  audioRecorderDidFinishRecordingSuccessfully(recorder: AVAudioRecorder, flag) {
+    console.log(`audioRecorderDidFinishRecordingSuccessfully: ${flag}`);
+    const owner = this._owner.get();
+    if (owner) {
+      // owner.notify({
+      //   eventName: 'RecorderFinishedSuccessfully',
+      // })
+    }
+  }
+}
+
+export class TNSRecorder extends Observable implements TNSRecordI {
   private _recorder: any;
   private _recordingSession: any;
 
   private _recorderOptions: AudioRecorderOptions;
 
-  public static CAN_RECORD(): boolean {
+  static CAN_RECORD(): boolean {
     return true;
   }
 
@@ -16,11 +50,7 @@ export class TNSRecorder extends NSObject implements TNSRecordI {
     return this._recorder;
   }
 
-  set debug(value: boolean) {
-    TNSRecorderUtil.debug = value;
-  }
-
-  public requestRecordPermission() {
+  requestRecordPermission() {
     return new Promise((resolve, reject) => {
       this._recordingSession.requestRecordPermission((allowed: boolean) => {
         if (allowed) {
@@ -32,15 +62,19 @@ export class TNSRecorder extends NSObject implements TNSRecordI {
     });
   }
 
-  public start(options: AudioRecorderOptions): Promise<any> {
+  start(options: AudioRecorderOptions): Promise<any> {
     this._recorderOptions = options;
+
     return new Promise((resolve, reject) => {
       try {
         this._recordingSession = AVAudioSession.sharedInstance();
         let errorRef = new interop.Reference();
-        this._recordingSession.setCategoryError(AVAudioSessionCategoryPlayAndRecord, errorRef);
+        this._recordingSession.setCategoryError(
+          AVAudioSessionCategoryPlayAndRecord,
+          errorRef
+        );
         if (errorRef) {
-          TNS_Recorder_Log(`setCategoryError: ${errorRef.value}`);
+          console.error(`setCategoryError: ${errorRef.value}, ${errorRef}`);
         }
 
         this._recordingSession.setActiveError(true, null);
@@ -50,6 +84,7 @@ export class TNSRecorder extends NSObject implements TNSRecordI {
             //   (<any>["AVFormatIDKey", "AVEncoderAudioQualityKey", "AVSampleRateKey", "AVNumberOfChannelsKey"]));
 
             const recordSetting = NSMutableDictionary.alloc().init();
+
             if (options.format) {
                 recordSetting.setValueForKey(NSNumber.numberWithInt(options.format), 'AVFormatIDKey');
             } else {
@@ -59,19 +94,32 @@ export class TNSRecorder extends NSObject implements TNSRecordI {
             //   NSNumber.numberWithInt((<any>AVAudioQuality).Medium.rawValue),
             //   'AVEncoderAudioQualityKey'
             // );
-            recordSetting.setValueForKey(NSNumber.numberWithInt(AVAudioQuality.Medium), 'AVEncoderAudioQualityKey');
-            recordSetting.setValueForKey(NSNumber.numberWithFloat(16000.0), 'AVSampleRateKey');
-            recordSetting.setValueForKey(NSNumber.numberWithInt(1), 'AVNumberOfChannelsKey');
+            recordSetting.setValueForKey(
+              NSNumber.numberWithInt(AVAudioQuality.Medium),
+              'AVEncoderAudioQualityKey'
+            );
+            recordSetting.setValueForKey(
+              NSNumber.numberWithFloat(16000.0),
+              'AVSampleRateKey'
+            );
+            recordSetting.setValueForKey(
+              NSNumber.numberWithInt(1),
+              'AVNumberOfChannelsKey'
+            );
 
             errorRef = new interop.Reference();
 
             const url = NSURL.fileURLWithPath(options.filename);
 
-            this._recorder = (<any>AVAudioRecorder.alloc()).initWithURLSettingsError(url, recordSetting, errorRef);
+            this._recorder = (<any>(
+              AVAudioRecorder.alloc()
+            )).initWithURLSettingsError(url, recordSetting, errorRef);
             if (errorRef && errorRef.value) {
-              TNS_Recorder_Log(errorRef.value);
+              console.error(
+                `initWithURLSettingsError errorRef: ${errorRef.value}, ${errorRef}`
+              );
             } else {
-              this._recorder.delegate = this;
+              this._recorder.delegate = TNSRecorderDelegate.initWithOwner(this);
               if (options.metering) {
                 this._recorder.meteringEnabled = true;
               }
@@ -87,47 +135,41 @@ export class TNSRecorder extends NSObject implements TNSRecordI {
           }
         });
       } catch (ex) {
-        TNS_Recorder_Log('start error', ex);
         reject(ex);
       }
     });
   }
 
-  public pause(): Promise<any> {
+  pause(): Promise<any> {
     return new Promise((resolve, reject) => {
       try {
         if (this._recorder) {
-          TNS_Recorder_Log('pausing recorder...');
           this._recorder.pause();
         }
         resolve();
       } catch (ex) {
-        TNS_Recorder_Log('pause error', ex);
         reject(ex);
       }
     });
   }
 
-  public resume(): Promise<any> {
+  resume(): Promise<any> {
     return new Promise((resolve, reject) => {
       try {
         if (this._recorder) {
-          TNS_Recorder_Log('resuming recorder...');
           this._recorder.record();
         }
         resolve();
       } catch (ex) {
-        TNS_Recorder_Log('resume error', ex);
         reject(ex);
       }
     });
   }
 
-  public stop(): Promise<any> {
+  stop(): Promise<any> {
     return new Promise((resolve, reject) => {
       try {
         if (this._recorder) {
-          TNS_Recorder_Log('stopping recorder...');
           this._recorder.stop();
         }
         // may need this in future
@@ -135,17 +177,15 @@ export class TNSRecorder extends NSObject implements TNSRecordI {
         this._recorder.meteringEnabled = false;
         resolve();
       } catch (ex) {
-        TNS_Recorder_Log('stop error', ex);
         reject(ex);
       }
     });
   }
 
-  public dispose(): Promise<any> {
+  dispose(): Promise<any> {
     return new Promise((resolve, reject) => {
       try {
         if (this._recorder) {
-          TNS_Recorder_Log('disposing recorder...');
           this._recorder.stop();
           this._recorder.meteringEnabled = false;
           this._recordingSession.setActiveError(false, null);
@@ -154,17 +194,16 @@ export class TNSRecorder extends NSObject implements TNSRecordI {
         }
         resolve();
       } catch (ex) {
-        TNS_Recorder_Log('dispose error', ex);
         reject(ex);
       }
     });
   }
 
-  public isRecording() {
+  isRecording() {
     return this._recorder && this._recorder.recording;
   }
 
-  public getMeters(channel?: number) {
+  getMeters(channel?: number) {
     if (this._recorder) {
       if (!this._recorder.meteringEnabled) {
         this._recorder.meteringEnabled = true;
