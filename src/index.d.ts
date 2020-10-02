@@ -1,4 +1,4 @@
-import { Observable } from 'tns-core-modules/data/observable';
+import { Observable } from '@nativescript/core';
 
 export interface AudioPlayerOptions {
   /**
@@ -20,6 +20,7 @@ export interface AudioPlayerOptions {
    * Set true to enable audio metering.
    */
   metering?: boolean;
+  audioMixing?: boolean;
 
   /**
    * Callback to execute when playback has completed.
@@ -353,7 +354,8 @@ export enum AudioFocusDurationHint {
    * playback to go back to where it was once your application no
    * longer requires audio focus.
    */
-  AUDIOFOCUS_GAIN_TRANSIENT = android.media.AudioManager.AUDIOFOCUS_GAIN_TRANSIENT,
+  AUDIOFOCUS_GAIN_TRANSIENT = android.media.AudioManager
+    .AUDIOFOCUS_GAIN_TRANSIENT,
   /**
    * This focus request type is similar to AUDIOFOCUS_GAIN_TRANSIENT
    * for the temporary aspect of the focus request, but it also
@@ -361,7 +363,8 @@ export enum AudioFocusDurationHint {
    * another application to keep playing at a reduced volume,
    * “ducked”.
    */
-  AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK = android.media.AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK,
+  AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK = android.media.AudioManager
+    .AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK,
   /**
    * Also for a temporary request, but also expresses that your
    * application expects the device to not play anything else. This
@@ -369,5 +372,6 @@ export enum AudioFocusDurationHint {
    * recognition, and don’t want for examples notifications to be
    * played by the system during that time.
    */
-  AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE = android.media.AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK
+  AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE = android.media.AudioManager
+    .AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK
 }

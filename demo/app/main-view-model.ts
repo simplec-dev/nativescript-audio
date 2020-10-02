@@ -1,12 +1,20 @@
-import * as app from '@nativescript/core/application';
-import { Observable } from '@nativescript/core/data/observable';
-import { File, knownFolders } from '@nativescript/core/file-system';
-import * as platform from '@nativescript/core/platform';
-import * as timer from '@nativescript/core/timer';
-import * as dialogs from '@nativescript/core/ui/dialogs';
-import { Page } from '@nativescript/core/ui/page';
-import { Slider } from '@nativescript/core/ui/slider';
-import { AudioPlayerOptions, AudioRecorderOptions, TNSPlayer, TNSRecorder } from 'nativescript-audio';
+import {
+  Application,
+  Dialogs,
+  File,
+  isAndroid,
+  knownFolders,
+  Observable,
+  Page,
+  Slider,
+  Utils
+} from '@nativescript/core';
+import {
+  AudioPlayerOptions,
+  AudioRecorderOptions,
+  TNSPlayer,
+  TNSRecorder
+} from 'nativescript-audio';
 
 export class AudioDemo extends Observable {
   @ObservableProperty() public isPlaying: boolean;
@@ -18,8 +26,6 @@ export class AudioDemo extends Observable {
   @ObservableProperty() public remainingDuration; // used to show the remaining time of the audio track
   private _recorder;
   private _player: TNSPlayer;
-  private _audioSessionId;
-  private _page;
   private _audioUrls: Array<any> = [
     {
       name: 'Fight Club',
@@ -62,7 +68,7 @@ export class AudioDemo extends Observable {
   public async startRecord(args) {
     try {
       if (!TNSRecorder.CAN_RECORD()) {
-        dialogs.alert('This device cannot record audio.');
+        Dialogs.alert('This device cannot record audio.');
         return;
       }
       const audioFolder = knownFolders.currentApp().getFolder('audio');
@@ -70,7 +76,7 @@ export class AudioDemo extends Observable {
 
       let androidFormat;
       let androidEncoder;
-      if (platform.isAndroid) {
+      if (isAndroid) {
         // m4a
         // static constants are not available, using raw values here
         // androidFormat = android.media.MediaRecorder.OutputFormat.MPEG_4;
@@ -79,7 +85,9 @@ export class AudioDemo extends Observable {
         androidEncoder = 3;
       }
 
-      const recordingPath = `${audioFolder.path}/recording.${this.platformExtension()}`;
+      const recordingPath = `${
+        audioFolder.path
+      }/recording.${this.platformExtension()}`;
 
       const recorderOptions: AudioRecorderOptions = {
         filename: recordingPath,
@@ -107,7 +115,7 @@ export class AudioDemo extends Observable {
     } catch (err) {
       this.isRecording = false;
       this._resetMeter();
-      dialogs.alert(err);
+      Dialogs.alert(err);
     }
   }
 
@@ -143,7 +151,9 @@ export class AudioDemo extends Observable {
   public getFile(args) {
     try {
       const audioFolder = knownFolders.currentApp().getFolder('audio');
-      const recordedFile = audioFolder.getFile(`recording.${this.platformExtension()}`);
+      const recordedFile = audioFolder.getFile(
+        `recording.${this.platformExtension()}`
+      );
       console.log(JSON.stringify(recordedFile));
       console.log('recording exists: ' + File.exists(recordedFile.path));
       this.recordedAudioFile = recordedFile.path;
@@ -154,7 +164,9 @@ export class AudioDemo extends Observable {
 
   public async playRecordedFile(args) {
     const audioFolder = knownFolders.currentApp().getFolder('audio');
-    const recordedFile = audioFolder.getFile(`recording.${this.platformExtension()}`);
+    const recordedFile = audioFolder.getFile(
+      `recording.${this.platformExtension()}`
+    );
     console.log('RECORDED FILE : ' + JSON.stringify(recordedFile));
 
     const playerOptions: AudioPlayerOptions = {
@@ -176,7 +188,7 @@ export class AudioDemo extends Observable {
 
       infoCallback: infoObject => {
         console.log(JSON.stringify(infoObject));
-        dialogs.alert('Info callback');
+        Dialogs.alert('Info callback');
       }
     };
 
@@ -206,7 +218,7 @@ export class AudioDemo extends Observable {
           this.isPlaying = false;
         },
         infoCallback: args => {
-          dialogs.alert('Info callback: ' + args.info);
+          Dialogs.alert('Info callback: ' + args.info);
           console.log(JSON.stringify(args));
         }
       };
@@ -271,7 +283,7 @@ export class AudioDemo extends Observable {
 
   public async stopPlaying(args) {
     await this._player.dispose();
-    alert('Media Player Disposed.');
+    Dialogs.alert('Media Player Disposed.');
   }
 
   /**
@@ -283,11 +295,12 @@ export class AudioDemo extends Observable {
   }
 
   public muteTap() {
+    this.currentVolume = this._player.volume;
     this._player.volume = 0;
   }
 
   public unmuteTap() {
-    this._player.volume = 1;
+    this._player.volume = 0.2;
   }
 
   public skipTo8() {
@@ -308,12 +321,12 @@ export class AudioDemo extends Observable {
 
   private platformExtension() {
     // 'mp3'
-    return `${app.android ? 'm4a' : 'caf'}`;
+    return `${Application.android ? 'm4a' : 'caf'}`;
   }
 
   private async _startDurationTracking(duration) {
     if (this._player && this._player.isAudioPlaying()) {
-      const timerId = timer.setInterval(() => {
+      const timerId = Utils.setInterval(() => {
         this.remainingDuration = duration - this._player.currentTime;
         // console.log(`this.remainingDuration = ${this.remainingDuration}`);
       }, 1000);
@@ -322,7 +335,7 @@ export class AudioDemo extends Observable {
 
   private _startVolumeTracking() {
     if (this._player) {
-      const timerId = timer.setInterval(() => {
+      const timerId = Utils.setInterval(() => {
         console.log('volume tracking', this._player.volume);
         this.currentVolume = this._player.volume;
       }, 2000);
@@ -335,10 +348,10 @@ export function ObservableProperty() {
     let storedValue = obj[key];
 
     Object.defineProperty(obj, key, {
-      get: function() {
+      get: function () {
         return storedValue;
       },
-      set: function(value) {
+      set: function (value) {
         if (storedValue === value) {
           return;
         }

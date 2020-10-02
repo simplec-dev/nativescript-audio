@@ -1,26 +1,5 @@
-import * as fs from 'tns-core-modules/file-system';
-import { isString } from 'tns-core-modules/utils/types';
+import { knownFolders, path as nsFilePath, Utils } from '@nativescript/core';
 import { AudioPlayerOptions, AudioRecorderOptions } from './options';
-
-export class TNSPlayerUtil {
-  public static debug: boolean = false;
-}
-
-export const TNS_Player_Log = (...args) => {
-  if (TNSPlayerUtil.debug) {
-    console.log('NativeScript-Audio - TNSPlayer', args);
-  }
-};
-
-export class TNSRecorderUtil {
-  public static debug: boolean = false;
-}
-
-export const TNS_Recorder_Log = (...args) => {
-  if (TNSRecorderUtil.debug) {
-    console.log('NativeScript-Audio - TNSRecorder', args);
-  }
-};
 
 export interface TNSPlayerI {
   /**
@@ -139,9 +118,12 @@ export function resolveAudioFilePath(path: string) {
       return path;
     } else {
       let audioPath;
-      let fileName = isString(path) ? path.trim() : '';
+      let fileName = Utils.isString(path) ? path.trim() : '';
       if (fileName.indexOf('~/') === 0) {
-        fileName = fs.path.join(fs.knownFolders.currentApp().path, fileName.replace('~/', ''));
+        fileName = nsFilePath.join(
+          knownFolders.currentApp().path,
+          fileName.replace('~/', '')
+        );
         audioPath = fileName;
       } else {
         audioPath = fileName;
